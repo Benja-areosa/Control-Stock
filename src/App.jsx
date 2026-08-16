@@ -58,6 +58,12 @@ function App () {
     setProductos(inventarioActualizado);
   };
 
+  const elimininarProductos = (id) => {
+  const inventarioSinElBorrado = productos.filter(producto => producto.id !== id);
+
+  setProductos(inventarioSinElBorrado);
+  }
+
   return (
     <div style={{ fontFamily: 'sans-serif', padding: '20px' }}>
       <h1>¡Sistema de stock!</h1>
@@ -142,6 +148,11 @@ function App () {
                     <button onClick={() => cambiarStock(producto.id, 1)} style={{ marginLeft: '5px' }}>
                       +
                     </button>  
+                    <button onClick={() => elimininarProductos(producto.id)}
+                      style={{marginLeft:'15px', cursor:'pointer'}}
+                      title='Eliminar Producto'>
+                        🗑️
+                      </button>
                   </li>
                 ))}
               </ul>
