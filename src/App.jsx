@@ -3,11 +3,10 @@ import { useState, useEffect } from 'react';
 function App () {
 
   const [productos, setProductos] = useState(() => {
-    const inventarioGuardado = localStorage.getItem ('stockDeposito');
+    const inventarioGuardado = localStorage.getItem('stockDeposito');
     if (inventarioGuardado) {
       return JSON.parse(inventarioGuardado);
     }
-
     return [
       { id: 1, nombre: 'Choco Almendra', cantidad: 5, categoria: 'Tentaciones'},
       { id: 2, nombre: 'Frutilla a la Crema', cantidad: 3, categoria: 'Latas', variedad: 'Cremas'}
@@ -17,12 +16,14 @@ function App () {
   const [nuevoNombre, setNuevoNombre] = useState('');
   const [nuevaCantidad, setNuevaCantidad] = useState('');
   const [nuevaCategoria, setNuevaCategoria] = useState('Latas'); 
-  const [nuevaVariedad, setNuevaVariedad] = useState ('Cremas');
+  const [nuevaVariedad, setNuevaVariedad] = useState('Cremas');
+  const [busqueda, setBusqueda] = useState('');
+
 
   const categoriasDisponibles = ['Tentaciones', 'Latas', 'Bombones', 'Familiares', 'Palitos', 'Frizzio', 'Insumos'];
   const variedadLatas = ['Cremas', 'Chocolate', 'Dulce de leche', 'Al agua'];
 
-  useEffect (() => {
+  useEffect(() => {
     localStorage.setItem('stockDeposito', JSON.stringify(productos));
   }, [productos]);
 
@@ -58,11 +59,10 @@ function App () {
     setProductos(inventarioActualizado);
   };
 
-  const elimininarProductos = (id) => {
-  const inventarioSinElBorrado = productos.filter(producto => producto.id !== id);
-
-  setProductos(inventarioSinElBorrado);
-  }
+  const eliminarProducto = (id) => {
+    const inventarioSinElBorrado = productos.filter(producto => producto.id !== id);
+    setProductos(inventarioSinElBorrado);
+  };
 
   return (
     <div style={{ fontFamily: 'sans-serif', padding: '20px' }}>
@@ -85,7 +85,7 @@ function App () {
           placeholder="Cantidad" 
           value={nuevaCantidad}
           onChange={(e) => setNuevaCantidad(e.target.value)}
-          style={{ marginRight: '10px' }}
+          style={{ marginRight: '10px', width: '80px' }}
           min='0'
           required
         />
@@ -101,10 +101,11 @@ function App () {
         </select>
 
         {nuevaCategoria === 'Latas' && (
-        <select value={nuevaVariedad}
-        onChange={(e) => setNuevaVariedad(e.target.value)}
-        style={{marginRight: '10px', backgroundColor: '#f1f1f1'}
-        }>
+        <select 
+          value={nuevaVariedad}
+          onChange={(e) => setNuevaVariedad(e.target.value)}
+          style={{marginRight: '10px', backgroundColor: '#f1f1f1'}}
+        >
           {variedadLatas.map(variedad => (
             <option key={variedad} value={variedad}>{variedad}</option>
           ))}
@@ -114,10 +115,22 @@ function App () {
         <button type="submit">Agregar al depósito</button>
       </form>
 
+      <div style={{ marginBottom: '30px' }}>
+        <input 
+          type="text" 
+          placeholder="🔍 Buscar producto por nombre..." 
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          style={{ padding: '8px', width: '300px', fontSize: '16px' }}
+        />
+      </div>
+
       <div>
         {categoriasDisponibles.map(categoria => {
           const productosDeEstaCategoria = productos.filter(
-            producto => producto.categoria === categoria
+            producto => 
+              producto.categoria === categoria && 
+              producto.nombre.toLowerCase().includes(busqueda.toLowerCase())
           );
 
           if (productosDeEstaCategoria.length === 0) {
@@ -129,30 +142,39 @@ function App () {
               <h2 style={{ borderBottom: '2px solid black' }}>{categoria}</h2>
               <ul>
                 {productosDeEstaCategoria.map(producto => (
-                  <li key={producto.id} style={{ marginBottom: '10px' }}>
-                    <strong>{producto.nombre}</strong> 
+                  <li key={producto.id} style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
+                    <strong style={{ minWidth: '150px' }}>{producto.nombre}</strong> 
                     
-                    {producto.variedad && <span style={{ color: 'gray' }}> ({producto.variedad})</span>}
+                    {producto.variedad && <span style={{ color: 'gray', marginLeft: '5px' }}> ({producto.variedad})</span>}
 
-                    {producto.cantidad === 0 
-                      ? <span style={{ color: 'red', fontWeight: 'bold' }}>Sin stock</span> 
-                      : <span>Total: {producto.cantidad}</span>
-                    }
-                    <button
-                    onClick={() => cambiarStock(producto.id, -1)} 
-                      style={{ marginLeft: '10px', cursor: producto.cantidad === 0 ? 'not-allowed' : 'pointer' }}
-                      disabled={producto.cantidad === 0}
+                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
+                      {producto.cantidad === 0 
+                        ? <span style={{ color: 'red', fontWeight: 'bold', marginRight: '15px' }}>Sin stock</span> 
+                        : <span style={{ marginRight: '15px' }}>Total: {producto.cantidad}</span>
+                      }
+                      
+                      <button
+                        onClick={() => cambiarStock(producto.id, -1)} 
+                        style={{ marginRight: '5px', cursor: producto.cantidad === 0 ? 'not-allowed' : 'pointer' }}
+                        disabled={producto.cantidad === 0}
                       >
                         -
                       </button>
-                    <button onClick={() => cambiarStock(producto.id, 1)} style={{ marginLeft: '5px' }}>
-                      +
-                    </button>  
-                    <button onClick={() => elimininarProductos(producto.id)}
-                      style={{marginLeft:'15px', cursor:'pointer'}}
-                      title='Eliminar Producto'>
+                      <button 
+                        onClick={() => cambiarStock(producto.id, 1)} 
+                        style={{ marginRight: '15px' }}
+                      >
+                        +
+                      </button>  
+
+                      <button 
+                        onClick={() => eliminarProducto(producto.id)} 
+                        style={{ cursor: 'pointer', background: 'none', border: 'none', fontSize: '16px' }}
+                        title="Eliminar producto"
+                      >
                         🗑️
                       </button>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -160,7 +182,6 @@ function App () {
           );
         })}
       </div>
-      
     </div>
   )
 }
